@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ember-postgres
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: emberdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: ember-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ember-backend
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      DATABASE_URL: postgresql://johndoe:randompassword@postgres:5432/emberdb?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change_me
+      JWT_REFRESH_SECRET: change_me_too
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
