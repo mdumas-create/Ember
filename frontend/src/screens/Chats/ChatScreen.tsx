@@ -259,10 +259,10 @@ const ChatScreen = ({ route, navigation }: any) => {
 
       const res = await api.post(`/chat/conversations/${conversationId}/messages`, body);
         
-        trackEvent('message_sent', user!.id, { 
+        trackEvent('message_sent', { 
           conversationId, 
           receiverId, 
-          hasMedia: !!attachmentUrl,
+          hasMedia: !!uploaded?.url,
           contentLength: body.content.length 
         });
 

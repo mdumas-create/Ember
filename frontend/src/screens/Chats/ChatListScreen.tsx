@@ -9,7 +9,7 @@ const ChatListScreen = ({ navigation }: any) => {
   const { user } = useAuth();
   const { colors } = useThemeMode();
   const styles = createStyles(colors);
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 

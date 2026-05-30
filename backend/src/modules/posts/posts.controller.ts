@@ -32,17 +32,15 @@ export const createPost = async (req: Request, res: Response) => {
         content: cleanContent,
         imageUrl: validated.imageUrl,
         authorId: authReq.user!.id,
-        media: validated.media?.length
-          ? {
-              create: validated.media.map((m) => ({
-                url: m.url,
-                type: m.type,
-              })),
-            }
-          : undefined,
+        media: {
+          create: (validated.media || []).map((m: any) => ({
+            url: m.url,
+            type: m.type || 'IMAGE',
+          })),
+        },
         hashtags: hashtags.length
           ? {
-              create: hashtags.map((tag) => ({
+              create: hashtags.map((tag: string) => ({
                 hashtag: {
                   connectOrCreate: {
                     where: { tag },
@@ -62,8 +60,10 @@ export const createPost = async (req: Request, res: Response) => {
       where: { followingId: authReq.user!.id },
       select: { followerId: true },
     });
-    if (followers.length) {
-      await redisClient.del(followers.map((f) => `feed:following:${f.followerId}`));
+    // Invalidar caches de feeds de seguidores
+    if (followers.length > 0) {
+      const keys = followers.map((f: any) => `feed:following:${f.followerId}`);
+      await redisClient.del(keys);
     }
 
     if (mentions.length) {
@@ -184,11 +184,11 @@ export const getFeed = async (req: Request, res: Response) => {
 
     // Cache the first page of global feed for 60 seconds
     if (!cursor && type === 'global') {
-      await redisClient.setEx('feed:latest', 60, JSON.stringify(response));
+      await (redisClient as any).setEx('feed:latest', 60, JSON.stringify(response));
     }
 
     if (!cursor && type === 'following' && userId) {
-      await redisClient.setEx(`feed:following:${userId}`, 30, JSON.stringify(response));
+      await (redisClient as any).setEx(`feed:following:${userId}`, 30, JSON.stringify(response));
     }
 
     res.json(response);

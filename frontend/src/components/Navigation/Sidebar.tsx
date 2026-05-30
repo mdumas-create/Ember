@@ -13,7 +13,7 @@ const Sidebar = () => {
   const [showMenu, setShowMenu] = useState(false);
   
   // Extracción del nombre de la ruta activa de forma recursiva para manejar anidamiento
-  const routeName = useNavigationState(state => {
+  const routeName = useNavigationState((state: any) => {
     const getActiveRouteName = (navState: any): string => {
       if (!navState || !navState.routes) return 'Feed';
       const route = navState.routes[navState.index ?? 0];
@@ -23,7 +23,7 @@ const Sidebar = () => {
       return route.name;
     };
     return getActiveRouteName(state);
-  });
+  }) as string;
 
   const styles = createStyles(colors, mode);
 
@@ -33,7 +33,7 @@ const Sidebar = () => {
     { name: 'Chats', icon: MessageCircle, label: 'Chats' },
     { name: 'Notifications', icon: Bell, label: 'Notificaciones' },
     { name: 'Profile', icon: User, label: 'Perfil' },
-  ];
+  ] as { name: string; icon: any; label: string; badge?: any }[];
 
   return (
     <View style={styles.sidebar}>
@@ -60,7 +60,7 @@ const Sidebar = () => {
                   // Navegamos a 'Main' y especificamos la pantalla interna
                   // Si es el perfil, pasamos el ID del usuario actual
                   const params = item.name === 'Profile' ? { userId: user?.id } : {};
-                  navigationRef.navigate('Main', { screen: item.name, params });
+                  (navigationRef as any).navigate('Main', { screen: item.name, params });
                 }
               }}
             >
