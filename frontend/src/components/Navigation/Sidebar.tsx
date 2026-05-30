@@ -95,7 +95,7 @@ const Sidebar = () => {
             onPress={() => { 
               setShowMenu(false); 
               if (navigationRef.isReady()) {
-                navigationRef.navigate('Settings' as any);
+                (navigationRef as any).navigate('Settings');
               }
             }}
           >
