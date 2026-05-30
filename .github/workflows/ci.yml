@@ -34,8 +34,9 @@ jobs:
 
   deploy-staging:
     needs: build
-    if: github.ref == 'refs/heads/main' && secrets.RENDER_DEPLOY_HOOK_URL != ''
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
         run: curl -fsSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
