@@ -95,7 +95,7 @@ function LoggedInApp() {
   const isDesktop = Platform.OS === 'web' && width >= 768;
 
   return (
-    <View style={{ flex: 1, flexDirection: 'row', height: Platform.OS === 'web' ? '100vh' : '100%' }}>
+    <View style={{ flex: 1, flexDirection: 'row' }}>
       {isDesktop && <Sidebar />}
       <View style={{ flex: 1, overflow: 'hidden' }}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>

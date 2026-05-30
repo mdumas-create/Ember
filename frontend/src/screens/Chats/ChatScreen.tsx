@@ -67,7 +67,7 @@ const ChatScreen = ({ route, navigation }: any) => {
 
   const receiverId = useMemo(() => {
     if (participant?.id) return participant.id;
-    const first = messages.find((m) => m.senderId !== user?.id);
+    const first = messages.find((m: Message) => m.senderId !== user?.id);
     return first?.senderId || '';
   }, [participant?.id, messages, user?.id]);
 
@@ -87,8 +87,8 @@ const ChatScreen = ({ route, navigation }: any) => {
 
       if (!nextCursor && socketRef.current && user?.id) {
         newItems
-          .filter((m) => m.senderId !== user.id && m.receiverId === user.id && !m.isRead)
-          .forEach((m) => {
+          .filter((m: Message) => m.senderId !== user.id && m.receiverId === user.id && !m.isRead)
+          .forEach((m: Message) => {
             socketRef.current.emit('mark_read', { messageId: m.id, userId: user.id, senderId: m.senderId });
           });
       }
