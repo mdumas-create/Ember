@@ -17,7 +17,6 @@ const LoginSchema = z.object({
 });
 
 export const register = async (req: Request, res: Response) => {
-  console.log('Registration attempt:', req.body);
   try {
     const validated = RegisterSchema.parse(req.body);
 

@@ -12,7 +12,25 @@ export const getMe = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: authReq.user!.id },
-      include: { _count: { select: { posts: true } } },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatarUrl: true,
+        bio: true,
+        interests: true,
+        isPublic: true,
+        fcmToken: true,
+        notifyPush: true,
+        notifyMessages: true,
+        notifyLikes: true,
+        notifyComments: true,
+        role: true,
+        reputation: true,
+        streak: true,
+        createdAt: true,
+        _count: { select: { posts: true } }
+      },
     });
     res.json(user);
   } catch (error: any) {

@@ -2,20 +2,31 @@
 
 Este documento contiene los pasos operativos para mantener y escalar Ember en producción.
 
-## 🚀 Despliegue y Escalado
+## 🚀 Despliegue en la Nube (Recomendado)
 
-### 1. Iniciar servicios con Docker
-Para un despliegue rápido en una nueva instancia:
-```bash
-docker-compose up -d --build
-```
+Para un despliegue rápido y escalable sin gestionar servidores (VPS), se recomienda la siguiente combinación:
 
-### 2. Escalar el Backend
-Si el tráfico aumenta, puedes escalar el servicio de backend:
-```bash
-docker-compose up -d --scale backend=3
-```
-*Nota: Asegúrate de tener configurado NGINX como balanceador de carga delante de estas instancias.*
+### 1. Base de Datos (Supabase)
+- Crea un proyecto en [Supabase](https://supabase.com/).
+- En la configuración del proyecto, obtén la **Connection String** de PostgreSQL.
+- Usa el modo "Transaction" (puerto 6543) para `DATABASE_URL` y el modo "Session" (puerto 5432) para `DIRECT_URL` en Prisma.
+
+### 2. Redis & Colas (Upstash)
+- Crea una base de datos Redis en [Upstash](https://upstash.com/).
+- Copia la URL de conexión (`rediss://...`) para la variable `REDIS_URL`. Esto es crítico para que los WebSockets y las notificaciones funcionen.
+
+### 3. Backend (Railway o Render)
+- **Por qué no Vercel**: El backend de Ember usa **Socket.io** (WebSockets) para el chat y presencia. Vercel (Serverless) no soporta conexiones persistentes.
+- Conecta tu repositorio a [Railway](https://railway.app/).
+- Railway detectará automáticamente el `backend/Dockerfile`.
+- Configura las variables de entorno: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `CLOUDINARY_*`, etc.
+
+### 4. Frontend (Vercel)
+- Conecta la carpeta `frontend/` a [Vercel](https://vercel.com/).
+- Configura la variable de entorno `EXPO_PUBLIC_API_URL` con la URL que te asigne Railway (ej: `https://ember-api.up.railway.app/api`).
+- Vercel construirá la versión web de la app automáticamente.
+
+## 🚀 Despliegue con Docker (Alternativo)
 
 ## 💾 Base de Datos y Backups
 
