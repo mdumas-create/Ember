@@ -6,6 +6,7 @@ RUN npm ci
 FROM node:20.19.4-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY tsconfig.json ./
 COPY src ./src
