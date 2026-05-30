@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
+const CloudinaryStorageAny = CloudinaryStorage as any;
 import { authenticateToken } from '../../middlewares/auth';
 
 const router = Router();
@@ -13,13 +14,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new CloudinaryStorage({
+const storage = new CloudinaryStorageAny({
   cloudinary: cloudinary,
   params: {
     folder: 'ember-posts',
     allowed_formats: ['jpg', 'png', 'jpeg', 'mp4', 'mov', 'webm', 'mp3', 'm4a', 'wav'],
     resource_type: 'auto', // Important for videos
-  } as any,
+  },
 });
 
 const upload = multer({ 
