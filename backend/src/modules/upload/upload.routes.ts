@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multerStorageCloudinary = require('multer-storage-cloudinary');
+const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
 import { authenticateToken } from '../../middlewares/auth';
 
 const router = Router();
@@ -13,7 +14,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new CloudinaryStorage({
+const storage = new (CloudinaryStorage as any)({
   cloudinary: cloudinary,
   params: {
     folder: 'ember-posts',
