@@ -29,6 +29,9 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY package.json ./
 
+# Generate Prisma Client in the runner stage
+RUN npx prisma generate
+
 # Add a start script that runs migrations and then the app
 RUN echo "npx prisma migrate deploy && node dist/index.js" > start.sh
 RUN chmod +x start.sh
