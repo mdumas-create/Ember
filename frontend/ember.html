@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ember — Red Social</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    /* ============================================================
+       1. CSS VARIABLES — DESIGN TOKENS
+    ============================================================ */
+    :root {
+      /* Primarios cálidos */
+      --accent:        #F59E0B;
+      --community:     #E07A5F;
+      --bg-main:       #FDF4E3;
+      /* Acentos fríos */
+      --notif-blue:    #3B82F6;
+      --chat-own:      #0F766E;
+      /* Neutros */
+      --text-primary:  #1F2937;
+      --card-bg:       #F3F4F6;
+      --border:        #E5E7EB;
+      --text-secondary:#6B7280;
+      /* Superficie */
+      --surface:       #FFFFFF;
+      --nav-bg:        #FFFFFF;
+      --shadow:        0 2px 12px rgba(0,0,0,.08);
+      --shadow-lg:     0 8px 32px rgba(0,0,0,.12);
+      --radius:        14px;
+      --radius-sm:     8px;
+      --transition:    .2s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg-main:       #1E1A17;
+      --card-bg:       #2D2A27;
+      --surface:       #2D2A27;
+      --nav-bg:        #252220;
+      --text-primary:  #FDF4E3;
+      --text-secondary:#A8A29E;
+      --border:        #3D3A37;
+      --accent:        #F59E0B;
+      --community:     #E07A5F;
+      --shadow:        0 2px 12px rgba(0,0,0,.35);
+      --shadow-lg:     0 8px 32px rgba(0,0,0,.45);
+    }
+
+    /* ============================================================
+       2. RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+    }
+
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    input, textarea { font-family: inherit; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       3. LAYOUT — APP SHELL
+    ============================================================ */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 640px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Contenido principal con padding inferior para la nav */
+    .main-content {
+      flex: 1;
+      padding-bottom: 72px;
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       4. TOP BAR
+    ============================================================ */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background var(--transition);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .logo .flame-icon {
+      font-size: 24px;
+      animation: flicker 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes flicker {
+      0%   { transform: scale(1) rotate(-2deg); }
+      100% { transform: scale(1.08) rotate(2deg); }
+    }
+
+    .top-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .icon-btn:hover { background: var(--border); transform: scale(1.05); }
+
+    /* Avatar en top-bar (desktop) */
+    .user-menu-wrap { position: relative; }
+    .user-avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid var(--accent);
+      transition: transform var(--transition);
+    }
+    .user-avatar-btn:hover { transform: scale(1.08); }
+    .user-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      min-width: 180px;
+      z-index: 200;
+      overflow: hidden;
+      display: none;
+      animation: fadeDown .15s ease;
+    }
+    .user-dropdown.open { display: block; }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-dropdown a, .user-dropdown button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-primary);
+      width: 100%;
+      text-align: left;
+      transition: background var(--transition);
+    }
+    .user-dropdown a:hover, .user-dropdown button:hover { background: var(--card-bg); }
+    .user-dropdown .divider { height: 1px; background: var(--border); }
+
+    /* ============================================================
+       5. BOTTOM NAV
+    ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 640px;
+      background: var(--nav-bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      padding: 6px 0 env(safe-area-inset-bottom, 6px);
+      transition: background var(--transition);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 4px;
+      font-size: 10px;
+      color: var(--text-secondary);
+      transition: color var(--transition);
+      position: relative;
+    }
+    .nav-item i { font-size: 20px; transition: transform var(--transition); }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active i { transform: scale(1.15); }
+    .nav-item:hover { color: var(--accent); }
+
+    .nav-badge {
+      position: absolute;
+      top: 4px;
+      right: calc(50% - 16px);
+      background: var(--notif-blue);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    /* ============================================================
+       6. SCREENS — show/hide
+    ============================================================ */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ============================================================
+       7. STORIES ROW
+    ============================================================ */
+    .stories-section {
+      padding: 14px 0 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stories-row {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding-right: 16px;
+      scrollbar-width: none;
+    }
+    .stories-row::-webkit-scrollbar { display: none; }
+
+    .story-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .story-ring {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      padding: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--community));
+      transition: transform var(--transition);
+    }
+    .story-ring:hover { transform: scale(1.06); }
+    .story-ring.seen { background: var(--border); }
+
+    .story-ring img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--bg-main);
+    }
+
+    .story-name {
+      font-size: 11px;
+      color: var(--text-secondary);
+      max-width: 62px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .story-add .story-ring {
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-add .story-ring i {
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    /* ============================================================
+       8. POST CARD
+    ============================================================ */
+    .posts-list { padding: 0; }
+
+    .post-card {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      transition: background var(--transition);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .post-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+    }
+
+    .post-meta { flex: 1; }
+    .post-author { font-size: 15px; font-weight: 600; }
+    .post-time { font-size: 12px; color: var(--text-secondary); }
+
+    .post-options-btn {
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 18px;
+      transition: background var(--transition);
+    }
+    .post-options-btn:hover { background: var(--card-bg); }
+
+    .post-text {
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .post-image {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      max-height: 340px;
+      margin-bottom: 10px;
+    }
+
+    .post-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-top: 6px;
+    }
+
+    .reaction-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: background var(--transition), color var(--transition), transform .15s;
+    }
+    .reaction-btn:hover { background: var(--card-bg); }
+    .reaction-btn.liked { color: #EF4444; }
+    .reaction-btn.fired { color: var(--accent); }
+    .reaction-btn:active { transform: scale(.92); }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: background var(--transition), color var(--transition);
+      margin-left: auto;
+    }
+    .action-btn:hover { background: var(--card-bg); color: var(--text-primary); }
+
+    /* ============================================================
+       9. MODAL — COMENTARIOS
+    ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn .2s ease;
+    }
+    .modal-overlay.open { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal-sheet {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 640px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp .25s ease;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-secondary);
+      transition: background var(--transition);
+    }
+    .modal-close:hover { background: var(--border); }
+
+    .comments-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 12px 18px;
+    }
+
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .comment-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .comment-body { flex: 1; }
+    .comment-author { font-size: 13px; font-weight: 600; }
+    .comment-text { font-size: 14px; color: var(--text-primary); margin-top: 2px; }
+    .comment-time { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* Comentarios anidados */
+    .comment-replies { margin-left: 44px; margin-top: 8px; }
+    .comment-reply-item {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .comment-reply-item .comment-avatar { width: 26px; height: 26px; }
+
+    .comment-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .comment-input-row img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .comment-input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .comment-input:focus { border-color: var(--accent); }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: transform var(--transition), background var(--transition);
+    }
+    .send-btn:hover { transform: scale(1.08); background: #D97706; }
+
+    /* ============================================================
+       10. CREATE POST MODAL
+    ============================================================ */
+    .create-post-modal .modal-sheet {
+      max-height: 90vh;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .create-post-body { padding: 16px 18px; flex: 1; overflow-y: auto; }
+
+    .create-post-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .create-post-user img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .create-post-user span { font-weight: 600; font-size: 15px; }
+
+    .create-post-textarea {
+      width: 100%;
+      min-height: 100px;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: var(--text-primary);
+      resize: none;
+    }
+    .create-post-textarea::placeholder { color: var(--text-secondary); }
+
+    .create-post-preview {
+      position: relative;
+      margin-top: 10px;
+    }
+    .create-post-preview img {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      max-height: 220px;
+      object-fit: cover;
+    }
+    .remove-preview {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,.6);
+      color: #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .create-post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .create-post-tools { display: flex; gap: 6px; }
+    .create-post-tools label, .create-post-tools button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .create-post-tools label:hover, .create-post-tools button:hover { background: var(--border); }
+    #post-file-input { display: none; }
+
+    .publish-btn {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .publish-btn:hover { background: #D97706; transform: scale(1.03); }
+
+    /* ============================================================
+       11. EXPLORE SCREEN
+    ============================================================ */
+    .search-bar-wrap {
+      padding: 14px 16px;
+      position: sticky;
+      top: 57px;
+      background: var(--bg-main);
+      z-index: 50;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 10px 16px;
+      transition: border-color var(--transition);
+    }
+    .search-bar:focus-within { border-color: var(--accent); }
+    .search-bar i { color: var(--text-secondary); font-size: 15px; }
+    .search-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+    .search-bar input::placeholder { color: var(--text-secondary); }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px 16px 8px;
+      color: var(--text-primary);
+    }
+
+    /* Sugerencias de usuarios */
+    .user-suggestions { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition);
+    }
+    .user-card:hover { transform: translateY(-1px); }
+
+    .user-card-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent);
+    }
+
+    .user-card-info { flex: 1; }
+    .user-card-name { font-size: 15px; font-weight: 600; }
+    .user-card-handle { font-size: 13px; color: var(--text-secondary); }
+
+    .follow-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .follow-btn:hover { background: #D97706; transform: scale(1.04); }
+    .follow-btn.following {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    /* Grid de publicaciones populares */
+    .popular-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      padding: 0 0 16px;
+    }
+
+    .popular-grid-item {
+      aspect-ratio: 1;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .popular-grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .3s ease;
+    }
+    .popular-grid-item:hover img { transform: scale(1.06); }
+
+    /* ============================================================
+       12. CHATS SCREEN
+    ============================================================ */
+    .chat-list { padding: 8px 0; }
+
+    .chat-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background var(--transition);
+      position: relative;
+    }
+    .chat-list-item:hover { background: var(--card-bg); }
+
+    .chat-avatar-wrap { position: relative; flex-shrink: 0; }
+    .chat-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .online-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background: #22C55E;
+      border-radius: 50%;
+      border: 2px solid var(--nav-bg);
+    }
+
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-name { font-size: 15px; font-weight: 600; }
+    .chat-last-msg {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .chat-time { font-size: 11px; color: var(--text-secondary); }
+    .unread-badge {
+      background: var(--notif-blue);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    /* Vista de chat individual */
+    .chat-view {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - 57px - 72px);
+      position: fixed;
+      inset: 57px 0 72px;
+      max-width: 640px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-main);
+      z-index: 150;
+    }
+    .chat-view.open { display: flex; }
+
+    .chat-view-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .chat-back-btn { font-size: 20px; color: var(--text-primary); padding: 4px 8px; }
+    .chat-view-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .chat-view-name { font-size: 15px; font-weight: 600; flex: 1; }
+    .chat-view-status { font-size: 12px; color: #22C55E; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .bubble-wrap.own { flex-direction: row-reverse; }
+
+    .bubble-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .bubble {
+      max-width: 72%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+    }
+    .bubble.other {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      color: var(--text-primary);
+    }
+    .bubble.own {
+      background: var(--chat-own);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-time {
+      font-size: 10px;
+      opacity: .65;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .typing-dots { display: flex; gap: 4px; }
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%            { transform: translateY(-6px); }
+    }
+
+    .chat-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--nav-bg);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-text-input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .chat-text-input:focus { border-color: var(--chat-own); }
+
+    /* ============================================================
+       13. NOTIFICATIONS SCREEN
+    ============================================================ */
+    .notif-list { padding: 8px 0; }
+
+    .notif-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      transition: background var(--transition);
+      position: relative;
+    }
+    .notif-item:hover { background: var(--card-bg); }
+    .notif-item.unread { background: color-mix(in srgb, var(--notif-blue) 6%, var(--bg-main)); }
+
+    .notif-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .notif-icon-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #fff;
+      border: 2px solid var(--bg-main);
+    }
+    .notif-icon-badge.like { background: #EF4444; }
+    .notif-icon-badge.fire { background: var(--accent); }
+    .notif-icon-badge.follow { background: var(--community); }
+    .notif-icon-badge.comment { background: var(--notif-blue); }
+    .notif-icon-badge.msg { background: var(--chat-own); }
+
+    .notif-content { flex: 1; min-width: 0; }
+    .notif-text { font-size: 14px; color: var(--text-primary); }
+    .notif-text strong { font-weight: 600; }
+    .notif-time { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .notif-unread-dot {
+      width: 9px;
+      height: 9px;
+      background: var(--notif-blue);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       14. PROFILE SCREEN
+    ============================================================ */
+    .profile-cover {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .profile-header {
+      padding: 0 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      margin-top: -36px;
+      margin-bottom: 10px;
+      width: fit-content;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--bg-main);
+    }
+
+    .profile-name { font-size: 20px; font-weight: 700; }
+    .profile-handle { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+    .profile-bio { font-size: 14px; color: var(--text-primary); margin-bottom: 12px; }
+
+    .profile-badges {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .badge-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 14px;
+    }
+
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 18px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: var(--text-secondary); }
+
+    .edit-profile-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: transparent;
+      transition: background var(--transition);
+    }
+    .edit-profile-btn:hover { background: var(--card-bg); }
+
+    /* Pestañas de perfil */
+    .profile-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 57px;
+      background: var(--bg-main);
+      z-index: 50;
+    }
+
+    .profile-tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      transition: color var(--transition), border-color var(--transition);
+      cursor: pointer;
+    }
+    .profile-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .profile-tab-content { display: none; }
+    .profile-tab-content.active { display: block; }
+
+    .profile-posts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .profile-posts-grid-item {
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+    .profile-posts-grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .3s;
+    }
+    .profile-posts-grid-item:hover img { transform: scale(1.05); }
+
+    /* ============================================================
+       15. DARK MODE TOGGLE
+    ============================================================ */
+    .theme-toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+    .theme-toggle.dark { background: var(--accent); }
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .theme-toggle.dark::after { transform: translateX(20px); }
+
+    /* ============================================================
+       16. TOAST
+    ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1F2937;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 500;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ============================================================
+       17. DESKTOP SIDEBAR (≥ 641px)
+    ============================================================ */
+    @media (min-width: 641px) {
+      body { background: var(--bg-main); }
+
+      .app-shell {
+        max-width: 100%;
+        flex-direction: row;
+        align-items: flex-start;
+      }
+
+      .sidebar {
+        width: 220px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        background: var(--nav-bg);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        flex-shrink: 0;
+        transition: background var(--transition);
+      }
+
+      .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent);
+        padding: 0 20px 24px;
+      }
+
+      .sidebar-nav { flex: 1; }
+
+      .sidebar-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 0 24px 24px 0;
+        margin-right: 12px;
+        transition: background var(--transition), color var(--transition);
+        position: relative;
+      }
+      .sidebar-nav-item i { font-size: 20px; width: 24px; text-align: center; }
+      .sidebar-nav-item:hover { background: var(--card-bg); color: var(--text-primary); }
+      .sidebar-nav-item.active { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-weight: 600; }
+
+      .sidebar-badge {
+        margin-left: auto;
+        background: var(--notif-blue);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+      }
+
+      .sidebar-bottom { padding: 16px 20px; }
+
+      .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background var(--transition);
+      }
+      .sidebar-user:hover { background: var(--card-bg); }
+      .sidebar-user img {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--accent);
+      }
+      .sidebar-user-info { flex: 1; min-width: 0; }
+      .sidebar-user-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sidebar-user-handle { font-size: 12px; color: var(--text-secondary); }
+
+      /* Ocultar top-bar y bottom-nav en desktop */
+      .bottom-nav { display: none; }
+      .top-bar { display: none; }
+
+      .main-content {
+        flex: 1;
+        max-width: 640px;
+        padding-bottom: 0;
+        border-right: 1px solid var(--border);
+        min-height: 100vh;
+      }
+
+      /* Top bar dentro del contenido en desktop */
+      .screen-top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(12px);
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      /* Chat view en desktop */
+      .chat-view {
+        position: fixed;
+        left: 220px;
+        right: 0;
+        max-width: 640px;
+        top: 0;
+        bottom: 0;
+        inset: 0 0 0 220px;
+        max-width: calc(640px);
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* ============================================================
+       18. MISC UTILITIES
+    ============================================================ */
+    .divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; color: var(--border); }
+    .empty-state p { font-size: 15px; }
+
+    /* Scroll suave en listas */
+    .comments-list, .chat-messages { scroll-behavior: smooth; }
+
+    /* Animación de entrada para tarjetas */
+    .post-card, .user-card, .notif-item, .chat-list-item {
+      animation: fadeInUp .25s ease both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     APP SHELL
+============================================================ -->
+<div class="app-shell" id="appShell">
+
+  <!-- SIDEBAR (visible en desktop) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="flame-icon">🔥</span> Ember
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-item active" data-screen="feed" onclick="switchScreen('feed')">
+        <i class="fa-solid fa-house"></i> Feed
+      </div>
+      <div class="sidebar-nav-item" data-screen="explore" onclick="switchScreen('explore')">
+        <i class="fa-solid fa-compass"></i> Explorar
+      </div>
+      <div class="sidebar-nav-item" data-screen="chats" onclick="switchScreen('chats')">
+        <i class="fa-solid fa-message"></i> Chats
+        <span class="sidebar-badge">3</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="notifications" onclick="switchScreen('notifications')">
+        <i class="fa-solid fa-bell"></i> Notificaciones
+        <span class="sidebar-badge">7</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="profile" onclick="switchScreen('profile')">
+        <i class="fa-solid fa-user"></i> Perfil
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <!-- Theme toggle -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;">
+        <i class="fa-solid fa-sun" style="color:var(--accent);font-size:16px;"></i>
+        <div class="theme-toggle" id="themeToggleSidebar" onclick="toggleTheme()"></div>
+        <i class="fa-solid fa-moon" style="color:var(--text-secondary);font-size:16px;"></i>
+      </div>
+      <div class="sidebar-user" onclick="toggleUserDropdown('sidebarDropdown')">
+        <img src="https://i.pravatar.cc/80?img=12" alt="Mi perfil" />
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Valentina Ruiz</div>
+          <div class="sidebar-user-handle">@valentinaR</div>
+        </div>
+        <i class="fa-solid fa-ellipsis-vertical" style="color:var(--text-secondary);"></i>
+      </div>
+      <div class="user-dropdown" id="sidebarDropdown">
+        <a href="#" onclick="switchScreen('profile');closeDropdowns();"><i class="fa-solid fa-user"></i> Perfil</a>
+        <a href="#"><i class="fa-solid fa-gear"></i> Configuración</a>
+        <div class="divider"></div>
+        <button onclick="showToast('Sesión cerrada');closeDropdowns();"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- TOP BAR (mobile) -->
+    <header class="top-bar" id="topBar">
+      <div class="logo">
+        <span class="flame-icon">🔥</span> Ember
+      </div>
+      <div class="top-bar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Cambiar tema">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+        <button class="icon-btn" onclick="openCreatePost()" title="Crear post">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <div class="user-menu-wrap">
+          <div class="user-avatar-btn" onclick="toggleUserDropdown('topBarDropdown')">
+            <img src="https://i.pravatar.cc/80?img=12" alt="Mi perfil" />
+          </div>
+          <div class="user-dropdown" id="topBarDropdown">
+            <a href="#" onclick="switchScreen('profile');closeDropdowns();"><i class="fa-solid fa-user"></i> Perfil</a>
+            <a href="#"><i class="fa-solid fa-gear"></i> Configuración</a>
+            <div class="divider"></div>
+            <button onclick="showToast('Sesión cerrada');closeDropdowns();"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================================================
+         SCREEN: FEED
+    ====================================================== -->
+    <section class="screen active" id="screen-feed">
+      <!-- Top bar desktop -->
+      <div class="screen-top-bar">
+        <span>🔥 Feed</span>
+        <button class="icon-btn" onclick="openCreatePost()"><i class="fa-solid fa-plus"></i></button>
+      </div>
+
+      <!-- Stories -->
+      <div class="stories-section">
+        <div class="stories-row" id="storiesRow">
+          <!-- Generadas por JS -->
+        </div>
+      </div>
+
+      <!-- Posts -->
+      <div class="posts-list" id="postsList">
+        <!-- Generados por JS -->
+      </div>
+    </section>
+
+    <!-- ======================================================
+         SCREEN: EXPLORE
+    ====================================================== -->
+    <section class="screen" id="screen-explore">
+      <div class="screen-top-bar">
+        <span>🔍 Explorar</span>
+      </div>
+      <div class="search-bar-wrap">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar personas, posts, temas…" />
+        </div>
+      </div>
+
+      <div class="section-title">Personas sugeridas</div>
+      <div class="user-suggestions" id="userSuggestions">
+        <!-- Generadas por JS -->
+      </div>
+
+      <div class="section-title">Publicaciones populares</div>
+      <div class="popular-grid" id="popularGrid">
+        <!-- Generadas por JS -->
+      </div>
+    </section>
+
+    <!-- ======================================================
+         SCREEN: CHATS
+    ====================================================== -->
+    <section class="screen" id="screen-chats">
+      <div class="screen-top-bar">
+        <span>💬 Chats</span>
+        <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
+      </div>
+      <div class="chat-list" id="chatList">
+        <!-- Generadas por JS -->
+      </div>
+    </section>
+
+    <!-- ======================================================
+         SCREEN: NOTIFICATIONS
+    ====================================================== -->
+    <section class="screen" id="screen-notifications">
+      <div class="screen-top-bar">
+        <span>🔔 Notificaciones</span>
+        <button class="icon-btn" onclick="markAllRead()"><i class="fa-solid fa-check-double"></i></button>
+      </div>
+      <div class="notif-list" id="notifList">
+        <!-- Generadas por JS -->
+      </div>
+    </section>
+
+    <!-- ======================================================
+         SCREEN: PROFILE
+    ====================================================== -->
+    <section class="screen" id="screen-profile">
+      <div class="screen-top-bar">
+        <span>👤 Perfil</span>
+        <button class="icon-btn"><i class="fa-solid fa-ellipsis"></i></button>
+      </div>
+      <img class="profile-cover" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&q=80" alt="Portada" />
+      <div class="profile-header">
+        <div class="profile-avatar-wrap">
+          <img class="profile-avatar" src="https://i.pravatar.cc/160?img=12" alt="Avatar" />
+        </div>
+        <div class="profile-name">Valentina Ruiz</div>
+        <div class="profile-handle">@valentinaR · Nivel 12</div>
+        <div class="profile-bio">Diseñadora UX/UI 🎨 | Exploradora de mundos digitales | Buenos Aires 🇦🇷</div>
+        <div class="profile-badges">
+          <div class="badge-pill"><span>🔥</span> Racha 14 días</div>
+          <div class="badge-pill"><span>⭐</span> Rep. 4.8</div>
+          <div class="badge-pill"><span>🏆</span> Nivel 12</div>
+        </div>
+        <div class="profile-stats">
+          <div class="stat-item"><div class="stat-num">248</div><div class="stat-label">Posts</div></div>
+          <div class="stat-item"><div class="stat-num">12.4K</div><div class="stat-label">Seguidores</div></div>
+          <div class="stat-item"><div class="stat-num">834</div><div class="stat-label">Siguiendo</div></div>
+        </div>
+        <button class="edit-profile-btn" onclick="showToast('Editar perfil próximamente')">Editar perfil</button>
+      </div>
+
+      <!-- Pestañas -->
+      <div class="profile-tabs">
+        <div class="profile-tab active" onclick="switchProfileTab(this,'tab-posts')">
+          <i class="fa-solid fa-grid-2"></i> Posts
+        </div>
+        <div class="profile-tab" onclick="switchProfileTab(this,'tab-stories')">
+          <i class="fa-solid fa-circle-play"></i> Historias
+        </div>
+        <div class="profile-tab" onclick="switchProfileTab(this,'tab-saved')">
+          <i class="fa-solid fa-bookmark"></i> Guardados
+        </div>
+      </div>
+
+      <div class="profile-tab-content active" id="tab-posts">
+        <div class="profile-posts-grid" id="profilePostsGrid">
+          <!-- Generadas por JS -->
+        </div>
+      </div>
+      <div class="profile-tab-content" id="tab-stories">
+        <div class="empty-state">
+          <i class="fa-solid fa-circle-play"></i>
+          <p>No hay historias archivadas aún.</p>
+        </div>
+      </div>
+      <div class="profile-tab-content" id="tab-saved">
+        <div class="empty-state">
+          <i class="fa-solid fa-bookmark"></i>
+          <p>No hay publicaciones guardadas.</p>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /main-content -->
+
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" data-screen="feed" onclick="switchScreen('feed')">
+      <i class="fa-solid fa-house"></i>
+      <span>Feed</span>
+    </div>
+    <div class="nav-item" data-screen="explore" onclick="switchScreen('explore')">
+      <i class="fa-solid fa-compass"></i>
+      <span>Explorar</span>
+    </div>
+    <div class="nav-item" data-screen="chats" onclick="switchScreen('chats')">
+      <i class="fa-solid fa-message"></i>
+      <span>Chats</span>
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" data-screen="notifications" onclick="switchScreen('notifications')">
+      <i class="fa-solid fa-bell"></i>
+      <span>Notifs</span>
+      <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-item" data-screen="profile" onclick="switchScreen('profile')">
+      <i class="fa-solid fa-user"></i>
+      <span>Perfil</span>
+    </div>
+  </nav>
+
+</div><!-- /app-shell -->
+
+<!-- ============================================================
+     MODAL: COMENTARIOS
+============================================================ -->
+<div class="modal-overlay" id="commentsModal" onclick="closeCommentsModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span>Comentarios</span>
+      <button class="modal-close" onclick="closeCommentsModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="comments-list" id="commentsList">
+      <!-- Generadas por JS -->
+    </div>
+    <div class="comment-input-row">
+      <img src="https://i.pravatar.cc/80?img=12" alt="Yo" />
+      <input class="comment-input" type="text" placeholder="Escribe un comentario…" id="commentInput" onkeydown="handleCommentKey(event)" />
+      <button class="send-btn" onclick="sendComment()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: CREAR POST
+============================================================ -->
+<div class="modal-overlay create-post-modal" id="createPostModal" onclick="closeCreatePost(event)">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <span>Nuevo post</span>
+      <button class="modal-close" onclick="closeCreatePost()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="create-post-body">
+      <div class="create-post-user">
+        <img src="https://i.pravatar.cc/80?img=12" alt="Yo" />
+        <span>Valentina Ruiz</span>
+      </div>
+      <textarea class="create-post-textarea" id="postTextarea" placeholder="¿Qué está pasando, Valentina?"></textarea>
+      <div class="create-post-preview" id="postPreview" style="display:none;">
+        <img id="postPreviewImg" src="" alt="Preview" />
+        <button class="remove-preview" onclick="removePostPreview()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="create-post-footer">
+      <div class="create-post-tools">
+        <label for="post-file-input" title="Imagen/Video">
+          <i class="fa-solid fa-image"></i>
+        </label>
+        <input type="file" id="post-file-input" accept="image/*,video/*" onchange="handlePostFile(event)" />
+        <button title="Emoji" onclick="insertEmoji()"><i class="fa-solid fa-face-smile"></i></button>
+        <button title="Ubicación" onclick="showToast('Ubicación no disponible en demo')"><i class="fa-solid fa-location-dot"></i></button>
+      </div>
+      <button class="publish-btn" onclick="publishPost()">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CHAT VIEW
+============================================================ -->
+<div class="chat-view" id="chatView">
+  <div class="chat-view-header">
+    <button class="chat-back-btn" onclick="closeChatView()"><i class="fa-solid fa-arrow-left"></i></button>
+    <img class="chat-view-avatar" id="chatViewAvatar" src="" alt="" />
+    <div>
+      <div class="chat-view-name" id="chatViewName"></div>
+      <div class="chat-view-status" id="chatViewStatus">En línea</div>
+    </div>
+    <button class="icon-btn" style="margin-left:auto;"><i class="fa-solid fa-phone"></i></button>
+    <button class="icon-btn"><i class="fa-solid fa-video"></i></button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <!-- Generadas por JS -->
+  </div>
+  <div class="typing-indicator" id="typingIndicator" style="display:none;">
+    <div class="typing-dots"><span></span><span></span><span></span></div>
+    <span id="typingName">está escribiendo...</span>
+  </div>
+  <div class="chat-input-row">
+    <button class="icon-btn"><i class="fa-solid fa-face-smile"></i></button>
+    <input class="chat-text-input" type="text" placeholder="Escribe un mensaje…" id="chatInput" onkeydown="handleChatKey(event)" oninput="handleChatTyping()" />
+    <button class="send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+/* ============================================================
+   DATA — Datos de ejemplo
+============================================================ */
+
+const ME = {
+  name: 'Valentina Ruiz',
+  handle: '@valentinaR',
+  avatar: 'https://i.pravatar.cc/80?img=12'
+};
+
+const STORIES_DATA = [
+  { name: 'Tú',       avatar: ME.avatar,                              seen: false, isMe: true },
+  { name: 'Camila',   avatar: 'https://i.pravatar.cc/80?img=5',       seen: false },
+  { name: 'Mateo',    avatar: 'https://i.pravatar.cc/80?img=8',       seen: false },
+  { name: 'Lucía',    avatar: 'https://i.pravatar.cc/80?img=9',       seen: true  },
+  { name: 'Andrés',   avatar: 'https://i.pravatar.cc/80?img=15',      seen: false },
+  { name: 'Sofía',    avatar: 'https://i.pravatar.cc/80?img=20',      seen: true  },
+  { name: 'Diego',    avatar: 'https://i.pravatar.cc/80?img=33',      seen: false },
+  { name: 'Mariana',  avatar: 'https://i.pravatar.cc/80?img=47',      seen: false },
+];
+
+const POSTS_DATA = [
+  {
+    id: 1,
+    author: 'Camila Torres',
+    handle: '@camilaT',
+    avatar: 'https://i.pravatar.cc/80?img=5',
+    time: 'hace 2 min',
+    text: '¡Buenos días! Empezando la semana con mucha energía 🌅 ¿Cómo están todos?',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=75',
+    likes: 142,
+    fires: 38,
+    comments: 24,
+    liked: false,
+    fired: false,
+  },
+  {
+    id: 2,
+    author: 'Mateo Gómez',
+    handle: '@mateoG',
+    avatar: 'https://i.pravatar.cc/80?img=8',
+    time: 'hace 15 min',
+    text: 'Acabo de terminar mi primer proyecto en React Native 🚀 Meses de trabajo y por fin funciona. ¡El esfuerzo vale la pena!',
+    image: null,
+    likes: 87,
+    fires: 61,
+    comments: 12,
+    liked: false,
+    fired: false,
+  },
+  {
+    id: 3,
+    author: 'Lucía Fernández',
+    handle: '@luciaF',
+    avatar: 'https://i.pravatar.cc/80?img=9',
+    time: 'hace 1 h',
+    text: 'La naturaleza nunca deja de sorprenderme 🌿',
+    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=75',
+    likes: 310,
+    fires: 95,
+    comments: 47,
+    liked: true,
+    fired: false,
+  },
+  {
+    id: 4,
+    author: 'Andrés Morales',
+    handle: '@andresM',
+    avatar: 'https://i.pravatar.cc/80?img=15',
+    time: 'hace 3 h',
+    text: 'Reflexión del día: el diseño no es solo cómo se ve algo, sino cómo se siente. — Steve Jobs',
+    image: null,
+    likes: 204,
+    fires: 77,
+    comments: 31,
+    liked: false,
+    fired: true,
+  },
+  {
+    id: 5,
+    author: 'Sofía Ramírez',
+    handle: '@sofiaR',
+    avatar: 'https://i.pravatar.cc/80?img=20',
+    time: 'hace 5 h',
+    text: 'Tarde de café y código ☕💻 Nada mejor.',
+    image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=600&q=75',
+    likes: 178,
+    fires: 52,
+    comments: 19,
+    liked: false,
+    fired: false,
+  },
+];
+
+const COMMENTS_DATA = [
+  {
+    id: 1,
+    author: 'Mateo Gómez',
+    avatar: 'https://i.pravatar.cc/80?img=8',
+    text: '¡Qué hermosa foto! 😍',
+    time: 'hace 5 min',
+    replies: [
+      { author: 'Camila Torres', avatar: 'https://i.pravatar.cc/80?img=5', text: '¡Totalmente de acuerdo!', time: 'hace 3 min' }
+    ]
+  },
+  {
+    id: 2,
+    author: 'Lucía Fernández',
+    avatar: 'https://i.pravatar.cc/80?img=9',
+    text: 'Me encanta el contenido que compartes siempre 🔥',
+    time: 'hace 12 min',
+    replies: []
+  },
+  {
+    id: 3,
+    author: 'Diego Vargas',
+    avatar: 'https://i.pravatar.cc/80?img=33',
+    text: '¿Dónde fue tomada esta foto?',
+    time: 'hace 20 min',
+    replies: [
+      { author: 'Camila Torres', avatar: 'https://i.pravatar.cc/80?img=5', text: 'En la Patagonia 🏔️', time: 'hace 18 min' }
+    ]
+  },
+];
+
+const USERS_DATA = [
+  { name: 'Diego Vargas',   handle: '@diegoV',   avatar: 'https://i.pravatar.cc/80?img=33', bio: 'Fotógrafo 📷',     following: false },
+  { name: 'Mariana López',  handle: '@marianaL', avatar: 'https://i.pravatar.cc/80?img=47', bio: 'Escritora ✍️',     following: false },
+  { name: 'Carlos Peña',    handle: '@carlosP',  avatar: 'https://i.pravatar.cc/80?img=52', bio: 'Dev Frontend 💻',  following: true  },
+  { name: 'Paula Soto',     handle: '@paulaS',   avatar: 'https://i.pravatar.cc/80?img=44', bio: 'Músico 🎸',        following: false },
+  { name: 'Javier Ruiz',    handle: '@javierR',  avatar: 'https://i.pravatar.cc/80?img=60', bio: 'Viajero 🌍',       following: false },
+];
+
+const POPULAR_IMAGES = [
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&q=70',
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&q=70',
+  'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=300&q=70',
+  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=300&q=70',
+  'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=300&q=70',
+  'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=300&q=70',
+  'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=300&q=70',
+  'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=300&q=70',
+  'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=300&q=70',
+];
+
+const CHATS_DATA = [
+  { id: 1, name: 'Camila Torres',  avatar: 'https://i.pravatar.cc/80?img=5',  lastMsg: 'Jajaja sí, fue increíble!',        time: '10:32', unread: 2, online: true  },
+  { id: 2, name: 'Mateo Gómez',    avatar: 'https://i.pravatar.cc/80?img=8',  lastMsg: '¿Viste el último capítulo?',       time: '09:15', unread: 0, online: true  },
+  { id: 3, name: 'Lucía Fernández',avatar: 'https://i.pravatar.cc/80?img=9',  lastMsg: 'Te mando el archivo mañana 📎',    time: 'Ayer',  unread: 1, online: false },
+  { id: 4, name: 'Diego Vargas',   avatar: 'https://i.pravatar.cc/80?img=33', lastMsg: 'Ok, nos vemos el viernes!',        time: 'Ayer',  unread: 0, online: false },
+  { id: 5, name: 'Sofía Ramírez',  avatar: 'https://i.pravatar.cc/80?img=20', lastMsg: '¡Muchas gracias por el consejo!',  time: 'Lun',   unread: 0, online: true  },
+];
+
+const CHAT_MESSAGES_DATA = {
+  1: [
+    { own: false, text: '¡Hola! ¿Cómo estás?', time: '10:10' },
+    { own: true,  text: '¡Todo bien! ¿Y tú?',  time: '10:11' },
+    { own: false, text: 'Súper, acabo de ver tu post del viaje 😍', time: '10:12' },
+    { own: true,  text: 'Jaja gracias! Fue un viaje increíble la verdad', time: '10:15' },
+    { own: false, text: 'Jajaja sí, fue increíble!', time: '10:32' },
+  ],
+  2: [
+    { own: false, text: '¿Viste el último capítulo?', time: '09:14' },
+    { own: true,  text: 'Todavía no, no me spoileen 😂', time: '09:15' },
+  ],
+  3: [
+    { own: true,  text: 'Oye, ¿tienes el archivo del proyecto?', time: 'Ayer 18:00' },
+    { own: false, text: 'Te mando el archivo mañana 📎', time: 'Ayer 18:05' },
+  ],
+  4: [
+    { own: false, text: 'Ok, nos vemos el viernes!', time: 'Ayer 14:30' },
+    { own: true,  text: '¡Perfecto! Ahí estaré 👍', time: 'Ayer 14:32' },
+  ],
+  5: [
+    { own: false, text: '¡Muchas gracias por el consejo!', time: 'Lun 20:00' },
+    { own: true,  text: 'De nada, cualquier cosa me avisas 😊', time: 'Lun 20:05' },
+  ],
+};
+
+const NOTIFS_DATA = [
+  { type: 'like',    avatar: 'https://i.pravatar.cc/80?img=8',  text: '<strong>Mateo Gómez</strong> le dio ❤️ a tu publicación.',          time: 'hace 2 min',  unread: true  },
+  { type: 'follow',  avatar: 'https://i.pravatar.cc/80?img=47', text: '<strong>Mariana López</strong> comenzó a seguirte.',                  time: 'hace 5 min',  unread: true  },
+  { type: 'comment', avatar: 'https://i.pravatar.cc/80?img=9',  text: '<strong>Lucía Fernández</strong> comentó: "¡Qué hermosa foto! 😍"',   time: 'hace 10 min', unread: true  },
+  { type: 'fire',    avatar: 'https://i.pravatar.cc/80?img=33', text: '<strong>Diego Vargas</strong> le dio 🔥 a tu publicación.',           time: 'hace 18 min', unread: true  },
+  { type: 'msg',     avatar: 'https://i.pravatar.cc/80?img=5',  text: '<strong>Camila Torres</strong> te envió un mensaje.',                 time: 'hace 30 min', unread: true  },
+  { type: 'follow',  avatar: 'https://i.pravatar.cc/80?img=52', text: '<strong>Carlos Peña</strong> comenzó a seguirte.',                    time: 'hace 1 h',    unread: true  },
+  { type: 'like',    avatar: 'https://i.pravatar.cc/80?img=44', text: '<strong>Paula Soto</strong> le dio ❤️ a tu publicación.',             time: 'hace 2 h',    unread: true  },
+  { type: 'comment', avatar: 'https://i.pravatar.cc/80?img=60', text: '<strong>Javier Ruiz</strong> comentó: "¡Sigue así! 💪"',             time: 'hace 3 h',    unread: false },
+  { type: 'like',    avatar: 'https://i.pravatar.cc/80?img=20', text: '<strong>Sofía Ramírez</strong> le dio ❤️ a tu publicación.',          time: 'hace 4 h',    unread: false },
+];
+
+/* ============================================================
+   RENDER FUNCTIONS
+============================================================ */
+
+function renderStories() {
+  const row = document.getElementById('storiesRow');
+  row.innerHTML = '';
+
+  // Botón "Agregar historia"
+  const addItem = document.createElement('div');
+  addItem.className = 'story-item story-add';
+  addItem.innerHTML = `
+    <div class="story-ring">
+      <i class="fa-solid fa-plus"></i>
+    </div>
+    <span class="story-name">Tu historia</span>
+  `;
+  addItem.onclick = () => showToast('Historia creada ✨');
+  row.appendChild(addItem);
+
+  STORIES_DATA.filter(s => !s.isMe).forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'story-item';
+    item.innerHTML = `
+      <div class="story-ring ${s.seen ? 'seen' : ''}">
+        <img src="${s.avatar}" alt="${s.name}" loading="lazy" />
+      </div>
+      <span class="story-name">${s.name}</span>
+    `;
+    item.onclick = () => {
+      s.seen = true;
+      item.querySelector('.story-ring').classList.add('seen');
+      showToast(`Historia de ${s.name}`);
+    };
+    row.appendChild(item);
+  });
+}
+
+function renderPosts() {
+  const list = document.getElementById('postsList');
+  list.innerHTML = '';
+  POSTS_DATA.forEach(post => {
+    const card = createPostCard(post);
+    list.appendChild(card);
+  });
+}
+
+function createPostCard(post) {
+  const card = document.createElement('article');
+  card.className = 'post-card';
+  card.dataset.id = post.id;
+
+  card.innerHTML = `
+    <div class="post-header">
+      <img class="post-avatar" src="${post.avatar}" alt="${post.author}" loading="lazy" />
+      <div class="post-meta">
+        <div class="post-author">${post.author}</div>
+        <div class="post-time">${post.handle} · ${post.time}</div>
+      </div>
+      <button class="post-options-btn"><i class="fa-solid fa-ellipsis"></i></button>
+    </div>
+    <p class="post-text">${post.text}</p>
+    ${post.image ? `<img class="post-image" src="${post.image}" alt="Post image" loading="lazy" />` : ''}
+    <div class="post-actions">
+      <button class="reaction-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id}, this)">
+        <i class="fa-${post.liked ? 'solid' : 'regular'} fa-heart"></i>
+        <span class="like-count">${post.likes}</span>
+      </button>
+      <button class="reaction-btn ${post.fired ? 'fired' : ''}" onclick="toggleFire(${post.id}, this)">
+        <i class="fa-solid fa-fire"></i>
+        <span class="fire-count">${post.fires}</span>
+      </button>
+      <button class="reaction-btn" onclick="openCommentsModal(${post.id})">
+        <i class="fa-regular fa-comment"></i>
+        <span>${post.comments}</span>
+      </button>
+      <button class="action-btn" onclick="sharePost(${post.id})">
+        <i class="fa-solid fa-share-nodes"></i>
+      </button>
+    </div>
+  `;
+  return card;
+}
+
+function renderExplore() {
+  // Usuarios sugeridos
+  const wrap = document.getElementById('userSuggestions');
+  wrap.innerHTML = '';
+  USERS_DATA.forEach((u, i) => {
+    const card = document.createElement('div');
+    card.className = 'user-card';
+    card.innerHTML = `
+      <img class="user-card-avatar" src="${u.avatar}" alt="${u.name}" loading="lazy" />
+      <div class="user-card-info">
+        <div class="user-card-name">${u.name}</div>
+        <div class="user-card-handle">${u.handle} · ${u.bio}</div>
+      </div>
+      <button class="follow-btn ${u.following ? 'following' : ''}" onclick="toggleFollow(this, ${i})">
+        ${u.following ? 'Siguiendo' : 'Seguir'}
+      </button>
+    `;
+    wrap.appendChild(card);
+  });
+
+  // Grid popular
+  const grid = document.getElementById('popularGrid');
+  grid.innerHTML = '';
+  POPULAR_IMAGES.forEach(src => {
+    const item = document.createElement('div');
+    item.className = 'popular-grid-item';
+    item.innerHTML = `<img src="${src}" alt="Popular" loading="lazy" />`;
+    item.onclick = () => showToast('Post popular 🔥');
+    grid.appendChild(item);
+  });
+}
+
+function renderChats() {
+  const list = document.getElementById('chatList');
+  list.innerHTML = '';
+  CHATS_DATA.forEach(chat => {
+    const item = document.createElement('div');
+    item.className = 'chat-list-item';
+    item.innerHTML = `
+      <div class="chat-avatar-wrap">
+        <img class="chat-avatar" src="${chat.avatar}" alt="${chat.name}" loading="lazy" />
+        ${chat.online ? '<div class="online-dot"></div>' : ''}
+      </div>
+      <div class="chat-info">
+        <div class="chat-name">${chat.name}</div>
+        <div class="chat-last-msg">${chat.lastMsg}</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">${chat.time}</div>
+        ${chat.unread > 0 ? `<div class="unread-badge">${chat.unread}</div>` : ''}
+      </div>
+    `;
+    item.onclick = () => openChatView(chat);
+    list.appendChild(item);
+  });
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  list.innerHTML = '';
+  const iconMap = { like: 'fa-heart', fire: 'fa-fire', follow: 'fa-user-plus', comment: 'fa-comment', msg: 'fa-message' };
+  NOTIFS_DATA.forEach((n, i) => {
+    const item = document.createElement('div');
+    item.className = `notif-item ${n.unread ? 'unread' : ''}`;
+    item.dataset.index = i;
+    item.innerHTML = `
+      <div style="position:relative;flex-shrink:0;">
+        <img class="notif-avatar" src="${n.avatar}" alt="" loading="lazy" />
+        <div class="notif-icon-badge ${n.type}"><i class="fa-solid ${iconMap[n.type]}"></i></div>
+      </div>
+      <div class="notif-content">
+        <div class="notif-text">${n.text}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${n.unread ? '<div class="notif-unread-dot"></div>' : ''}
+    `;
+    item.onclick = () => markNotifRead(i, item);
+    list.appendChild(item);
+  });
+}
+
+function renderProfileGrid() {
+  const grid = document.getElementById('profilePostsGrid');
+  grid.innerHTML = '';
+  POPULAR_IMAGES.forEach(src => {
+    const item = document.createElement('div');
+    item.className = 'profile-posts-grid-item';
+    item.innerHTML = `<img src="${src}" alt="Post" loading="lazy" />`;
+    grid.appendChild(item);
+  });
+}
+
+/* ============================================================
+   INTERACTIONS
+============================================================ */
+
+// --- Navegación de pantallas ---
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  // Bottom nav
+  document.querySelectorAll('.nav-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.screen === name);
+  });
+
+  // Sidebar
+  document.querySelectorAll('.sidebar-nav-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.screen === name);
+  });
+
+  // Cerrar chat view si cambia de pantalla
+  closeChatView();
+}
+
+// --- Reacciones ---
+function toggleLike(postId, btn) {
+  const post = POSTS_DATA.find(p => p.id === postId);
+  post.liked = !post.liked;
+  if (post.liked) { post.likes++; } else { post.likes--; }
+  btn.classList.toggle('liked', post.liked);
+  btn.querySelector('i').className = `fa-${post.liked ? 'solid' : 'regular'} fa-heart`;
+  btn.querySelector('.like-count').textContent = post.likes;
+  if (post.liked) animateBtn(btn);
+}
+
+function toggleFire(postId, btn) {
+  const post = POSTS_DATA.find(p => p.id === postId);
+  post.fired = !post.fired;
+  if (post.fired) { post.fires++; } else { post.fires--; }
+  btn.classList.toggle('fired', post.fired);
+  btn.querySelector('.fire-count').textContent = post.fires;
+  if (post.fired) animateBtn(btn);
+}
+
+function animateBtn(btn) {
+  btn.style.transform = 'scale(1.35)';
+  setTimeout(() => { btn.style.transform = ''; }, 200);
+}
+
+// --- Compartir ---
+function sharePost(postId) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText('https://ember.app/post/' + postId);
+  }
+  showToast('¡Enlace copiado al portapapeles! 🔗');
+}
+
+// --- Seguir ---
+function toggleFollow(btn, idx) {
+  USERS_DATA[idx].following = !USERS_DATA[idx].following;
+  btn.classList.toggle('following', USERS_DATA[idx].following);
+  btn.textContent = USERS_DATA[idx].following ? 'Siguiendo' : 'Seguir';
+  showToast(USERS_DATA[idx].following ? `Siguiendo a ${USERS_DATA[idx].name} ✅` : `Dejaste de seguir a ${USERS_DATA[idx].name}`);
+}
+
+// --- Modal Comentarios ---
+function openCommentsModal(postId) {
+  renderComments();
+  document.getElementById('commentsModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCommentsModal(e) {
+  if (!e || e.target === document.getElementById('commentsModal') || e.type === 'click' && !e.target.closest('.modal-sheet')) {
+    document.getElementById('commentsModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+function renderComments() {
+  const list = document.getElementById('commentsList');
+  list.innerHTML = '';
+  COMMENTS_DATA.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.innerHTML = `
+      <img class="comment-avatar" src="${c.avatar}" alt="${c.author}" loading="lazy" />
+      <div class="comment-body">
+        <div class="comment-author">${c.author}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-time">${c.time}</div>
+        ${c.replies.length > 0 ? `
+          <div class="comment-replies">
+            ${c.replies.map(r => `
+              <div class="comment-reply-item">
+                <img class="comment-avatar" src="${r.avatar}" alt="${r.author}" loading="lazy" />
+                <div class="comment-body">
+                  <div class="comment-author">${r.author}</div>
+                  <div class="comment-text">${r.text}</div>
+                  <div class="comment-time">${r.time}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function handleCommentKey(e) {
+  if (e.key === 'Enter') sendComment();
+}
+
+function sendComment() {
+  const input = document.getElementById('commentInput');
+  const text = input.value.trim();
+  if (!text) return;
+  COMMENTS_DATA.unshift({
+    id: Date.now(),
+    author: ME.name,
+    avatar: ME.avatar,
+    text,
+    time: 'ahora',
+    replies: []
+  });
+  renderComments();
+  input.value = '';
+  document.querySelector('.comments-list').scrollTop = 0;
+}
+
+// --- Modal Crear Post ---
+function openCreatePost() {
+  document.getElementById('createPostModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('postTextarea').focus(), 300);
+}
+
+function closeCreatePost(e) {
+  if (!e || e.target === document.getElementById('createPostModal')) {
+    document.getElementById('createPostModal').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('postTextarea').value = '';
+    document.getElementById('postPreview').style.display = 'none';
+    document.getElementById('postPreviewImg').src = '';
+  }
+}
+
+function handlePostFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('postPreviewImg').src = ev.target.result;
+    document.getElementById('postPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePostPreview() {
+  document.getElementById('postPreview').style.display = 'none';
+  document.getElementById('postPreviewImg').src = '';
+  document.getElementById('post-file-input').value = '';
+}
+
+function insertEmoji() {
+  const ta = document.getElementById('postTextarea');
+  const emojis = ['😄','🔥','❤️','🚀','✨','🎉','👏','💡'];
+  ta.value += emojis[Math.floor(Math.random() * emojis.length)];
+  ta.focus();
+}
+
+function publishPost() {
+  const text = document.getElementById('postTextarea').value.trim();
+  const imgSrc = document.getElementById('postPreviewImg').src;
+  if (!text && !imgSrc) { showToast('Escribe algo antes de publicar'); return; }
+
+  const newPost = {
+    id: Date.now(),
+    author: ME.name,
+    handle: ME.handle,
+    avatar: ME.avatar,
+    time: 'ahora',
+    text,
+    image: imgSrc || null,
+    likes: 0,
+    fires: 0,
+    comments: 0,
+    liked: false,
+    fired: false,
+  };
+  POSTS_DATA.unshift(newPost);
+  renderPosts();
+  closeCreatePost();
+  showToast('¡Post publicado! 🎉');
+}
+
+// --- Chat view ---
+let currentChatId = null;
+let typingTimer = null;
+
+function openChatView(chat) {
+  currentChatId = chat.id;
+  document.getElementById('chatViewAvatar').src = chat.avatar;
+  document.getElementById('chatViewName').textContent = chat.name;
+  document.getElementById('chatViewStatus').textContent = chat.online ? 'En línea' : 'Desconectado';
+  document.getElementById('typingName').textContent = chat.name + ' está escribiendo...';
+
+  renderChatMessages(chat.id);
+  document.getElementById('chatView').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Scroll al final
+  setTimeout(() => {
+    const msgs = document.getElementById('chatMessages');
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 50);
+}
+
+function closeChatView() {
+  document.getElementById('chatView').classList.remove('open');
+  document.body.style.overflow = '';
+  currentChatId = null;
+  clearTimeout(typingTimer);
+  document.getElementById('typingIndicator').style.display = 'none';
+}
+
+function renderChatMessages(chatId) {
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+  const msgs = CHAT_MESSAGES_DATA[chatId] || [];
+  msgs.forEach(m => {
+    const wrap = document.createElement('div');
+    wrap.className = `bubble-wrap ${m.own ? 'own' : ''}`;
+    wrap.innerHTML = `
+      ${!m.own ? `<img class="bubble-avatar" src="${CHATS_DATA.find(c=>c.id===chatId).avatar}" alt="" loading="lazy" />` : ''}
+      <div class="bubble ${m.own ? 'own' : 'other'}">
+        ${m.text}
+        <div class="bubble-time">${m.time}</div>
+      </div>
+    `;
+    container.appendChild(wrap);
+  });
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter') sendChatMessage();
+}
+
+let typingTimeout = null;
+function handleChatTyping() {
+  if (!currentChatId) return;
+  const chat = CHATS_DATA.find(c => c.id === currentChatId);
+  if (!chat || !chat.online) return;
+
+  const indicator = document.getElementById('typingIndicator');
+  indicator.style.display = 'flex';
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    indicator.style.display = 'none';
+  }, 2000);
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !currentChatId) return;
+
+  const newMsg = { own: true, text, time: 'ahora' };
+  if (!CHAT_MESSAGES_DATA[currentChatId]) CHAT_MESSAGES_DATA[currentChatId] = [];
+  CHAT_MESSAGES_DATA[currentChatId].push(newMsg);
+
+  // Actualizar último mensaje en la lista
+  const chat = CHATS_DATA.find(c => c.id === currentChatId);
+  if (chat) chat.lastMsg = text;
+
+  renderChatMessages(currentChatId);
+  input.value = '';
+
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Simular respuesta
+  setTimeout(() => {
+    document.getElementById('typingIndicator').style.display = 'flex';
+    setTimeout(() => {
+      document.getElementById('typingIndicator').style.display = 'none';
+      const replies = ['¡Genial! 😊', '¡Claro que sí!', 'Entendido 👍', '¡Jaja, qué bueno!', 'Cuéntame más 🤔'];
+      const reply = { own: false, text: replies[Math.floor(Math.random() * replies.length)], time: 'ahora' };
+      CHAT_MESSAGES_DATA[currentChatId].push(reply);
+      renderChatMessages(currentChatId);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 1800);
+  }, 800);
+}
+
+// --- Notificaciones ---
+function markNotifRead(idx, item) {
+  NOTIFS_DATA[idx].unread = false;
+  item.classList.remove('unread');
+  const dot = item.querySelector('.notif-unread-dot');
+  if (dot) dot.remove();
+  updateNotifBadge();
+}
+
+function markAllRead() {
+  NOTIFS_DATA.forEach(n => n.unread = false);
+  renderNotifications();
+  updateNotifBadge();
+  showToast('Todas las notificaciones leídas ✅');
+}
+
+function updateNotifBadge() {
+  const count = NOTIFS_DATA.filter(n => n.unread).length;
+  const badges = document.querySelectorAll('.nav-badge, .sidebar-badge');
+  // Solo actualizar el de notificaciones (índice 3 en bottom nav)
+  document.querySelectorAll('[data-screen="notifications"] .nav-badge').forEach(b => {
+    b.textContent = count;
+    b.style.display = count > 0 ? 'flex' : 'none';
+  });
+}
+
+// --- Perfil tabs ---
+function switchProfileTab(tab, contentId) {
+  document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(contentId).classList.add('active');
+}
+
+// --- Theme toggle ---
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('ember-theme', newTheme);
+
+  // Actualizar toggles visuales
+  document.querySelectorAll('.theme-toggle').forEach(t => {
+    t.classList.toggle('dark', newTheme === 'dark');
+  });
+}
+
+// --- Dropdown usuario ---
+function toggleUserDropdown(id) {
+  const dropdown = document.getElementById(id);
+  const isOpen = dropdown.classList.contains('open');
+  closeDropdowns();
+  if (!isOpen) dropdown.classList.add('open');
+}
+
+function closeDropdowns() {
+  document.querySelectorAll('.user-dropdown').forEach(d => d.classList.remove('open'));
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.user-menu-wrap') && !e.target.closest('.sidebar-user')) {
+    closeDropdowns();
+  }
+});
+
+// --- Toast ---
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+(function init() {
+  // Restaurar tema
+  const savedTheme = localStorage.getItem('ember-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.querySelectorAll('.theme-toggle').forEach(t => {
+    t.classList.toggle('dark', savedTheme === 'dark');
+  });
+
+  // Renderizar todas las secciones
+  renderStories();
+  renderPosts();
+  renderExplore();
+  renderChats();
+  renderNotifications();
+  renderProfileGrid();
+})();
+</script>
+</body>
+</html>

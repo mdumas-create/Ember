@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060352401741",
+    "project_id": "ember-bd5b4",
+    "storage_bucket": "ember-bd5b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060352401741:android:1e7e29fd93a88653189704",
+        "android_client_info": {
+          "package_name": "com.ember.social"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2CpVykgo43Q2pOtfPmjPDKC9yiwHZDMo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
