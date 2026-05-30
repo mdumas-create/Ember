@@ -4,8 +4,15 @@ import axios from 'axios';
 import prisma from '../config/database';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-const notificationQueue = new Queue('notifications', REDIS_URL);
-const retentionQueue = new Queue('retention', REDIS_URL);
+const queueOptions = {
+  redis: {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+  },
+};
+
+const notificationQueue = new Queue('notifications', REDIS_URL, queueOptions);
+const retentionQueue = new Queue('retention', REDIS_URL, queueOptions);
 
 notificationQueue.process(async (job) => {
   const { userId, title, body, fcmToken } = job.data;
