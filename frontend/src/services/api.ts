@@ -2,12 +2,18 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Ensure the URL ends with /api/ so axios combines paths correctly
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'https://ember-backend-dpn8.onrender.com/api').replace(/\/$/, '') + '/';
+// Ensure the URL always includes /api/ even if the environment variable misses it
+let baseUrl = (process.env.EXPO_PUBLIC_API_URL || 'https://ember-backend-dpn8.onrender.com/api').trim();
+
+if (!baseUrl.toLowerCase().includes('/api')) {
+  baseUrl = baseUrl.replace(/\/$/, '') + '/api';
+}
+
+const API_URL = baseUrl.replace(/\/$/, '') + '/';
 
 console.log('--- API DEBUG ---');
 console.log('Platform:', Platform.OS);
-console.log('API_URL:', API_URL);
+console.log('Final API_URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
