@@ -2,8 +2,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Use the static URL from Render as a robust fallback
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://ember-backend-dpn8.onrender.com/api';
+// Ensure the URL ends with /api/ so axios combines paths correctly
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'https://ember-backend-dpn8.onrender.com/api').replace(/\/$/, '') + '/';
 
 console.log('--- API DEBUG ---');
 console.log('Platform:', Platform.OS);

@@ -77,7 +77,7 @@ const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete('/users/me');
+              await api.delete('users/me');
               signOut();
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar la cuenta');
@@ -478,3 +478,4 @@ const createStyles = (colors: any, mode: 'light' | 'dark') => StyleSheet.create(
 });
 
 export default ProfileScreen;
+

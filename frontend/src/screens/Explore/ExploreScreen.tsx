@@ -20,7 +20,7 @@ const ExploreScreen = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const res = await api.get('/users/suggestions');
+      const res = await api.get('users/suggestions');
       setSuggestions(res.data);
     } catch (e) {
     } finally {
@@ -289,3 +289,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default ExploreScreen;
+

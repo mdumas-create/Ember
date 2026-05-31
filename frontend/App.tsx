@@ -167,7 +167,7 @@ function Navigation() {
       if (!token) return;
       if (user.fcmToken === token) return;
 
-      const response = await api.put('/users/me', { fcmToken: token });
+      const response = await api.put('users/me', { fcmToken: token });
       await updateUser(response.data);
     };
 

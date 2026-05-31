@@ -25,7 +25,7 @@ const SettingsScreen = () => {
   const togglePublic = async (value: boolean) => {
     setIsPublic(value);
     try {
-      const response = await api.put('/users/me', { isPublic: value });
+      const response = await api.put('users/me', { isPublic: value });
       updateUser(response.data);
     } catch (error) {
       setIsPublic(!value);
@@ -35,7 +35,7 @@ const SettingsScreen = () => {
 
   const updateNotificationPrefs = async (data: any, rollback: () => void) => {
     try {
-      const response = await api.put('/users/me', data);
+      const response = await api.put('users/me', data);
       updateUser(response.data);
     } catch (error) {
       rollback();
@@ -64,7 +64,7 @@ const SettingsScreen = () => {
     if (!oldPassword || !newPassword) return;
     setChangingPassword(true);
     try {
-      await api.post('/users/me/change-password', { oldPassword, newPassword });
+      await api.post('users/me/change-password', { oldPassword, newPassword });
       Alert.alert('Éxito', 'Contraseña actualizada');
       setShowPasswordChange(false);
       setOldPassword('');
@@ -87,7 +87,7 @@ const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete('/users/me');
+              await api.delete('users/me');
               await signOut();
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar la cuenta');
@@ -376,3 +376,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default SettingsScreen;
+

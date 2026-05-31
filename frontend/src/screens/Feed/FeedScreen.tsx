@@ -108,7 +108,7 @@ const FeedScreen = () => {
   const fetchStories = async () => {
     setStoriesLoading(true);
     try {
-      const res = await api.get('/stories');
+      const res = await api.get('stories');
       setStories(res.data);
       await AsyncStorage.setItem('stories:feed', JSON.stringify(res.data));
     } catch (e) {
@@ -169,7 +169,7 @@ const FeedScreen = () => {
             } as any);
           }
 
-          const uploadRes = await api.post('/upload', formData, {
+          const uploadRes = await api.post('upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
             onUploadProgress: (evt: any) => {
               if (!evt.total) return;
@@ -186,7 +186,7 @@ const FeedScreen = () => {
         }
       }
 
-      await api.post('/posts', { content: newPostContent, imageUrl, media: uploadedMedia });
+      await api.post('posts', { content: newPostContent, imageUrl, media: uploadedMedia });
       trackEvent('post_created', { 
         hasMedia: uploadedMedia.length > 0, 
         mediaCount: uploadedMedia.length,
@@ -273,11 +273,11 @@ const FeedScreen = () => {
       } as any);
     }
 
-    const uploadRes = await api.post('/upload', formData, {
+    const uploadRes = await api.post('upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    await api.post('/stories', { mediaUrl: uploadRes.data.url, mediaType: pickedType });
+    await api.post('stories', { mediaUrl: uploadRes.data.url, mediaType: pickedType });
     fetchStories();
   };
 
@@ -305,7 +305,7 @@ const FeedScreen = () => {
     const story = activeStoryUser?.stories?.[activeStoryIndex];
     if (story) {
       api.post(`/stories/${story.id}/react`, { emoji }).catch(console.error);
-      api.post('/analytics/event', { 
+      api.post('analytics/event', { 
         event: 'story_reaction', 
         properties: { storyId: story.id, authorId: activeStoryUser?.authorId, emoji } 
       }).catch(() => {});
@@ -843,3 +843,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default FeedScreen;
+

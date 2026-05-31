@@ -21,7 +21,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     try {
-      const res = await api.get('/config/flags');
+      const res = await api.get('config/flags');
       setFlags(res.data);
     } catch (e) {
       console.error('Failed to fetch flags:', e);
@@ -50,3 +50,4 @@ export const useConfig = () => {
   }
   return context;
 };
+

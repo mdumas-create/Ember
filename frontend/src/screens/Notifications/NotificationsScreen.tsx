@@ -78,7 +78,7 @@ const NotificationsScreen = () => {
 
   const markAllRead = async () => {
     try {
-      await api.post('/users/me/notifications/read-all');
+      await api.post('users/me/notifications/read-all');
       setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (e) {}
   };
@@ -297,3 +297,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default NotificationsScreen;
+

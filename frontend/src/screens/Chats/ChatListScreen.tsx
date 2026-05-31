@@ -19,7 +19,7 @@ const ChatListScreen = ({ navigation }: any) => {
 
   const fetchConversations = async () => {
     try {
-      const response = await api.get('/chat/conversations');
+      const response = await api.get('chat/conversations');
       setConversations(response.data);
     } catch (error) {
       console.error(error);
@@ -265,3 +265,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default ChatListScreen;
+

@@ -25,7 +25,7 @@ const AdminScreen = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/mod/reports');
+      const res = await api.get('mod/reports');
       setReports(res.data.reports);
     } catch (e) {
       console.error('Error fetching reports:', e);
@@ -184,3 +184,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default AdminScreen;
+

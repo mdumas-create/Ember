@@ -230,7 +230,7 @@ const ChatScreen = ({ route, navigation }: any) => {
       } as any);
     }
 
-    const uploadRes = await api.post('/upload', formData, {
+    const uploadRes = await api.post('upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (evt: any) => {
         if (!evt.total) return;
@@ -886,3 +886,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default ChatScreen;
+

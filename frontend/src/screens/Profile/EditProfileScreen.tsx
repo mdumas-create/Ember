@@ -95,7 +95,7 @@ const EditProfileScreen = () => {
     if (!username.trim()) return;
     setLoading(true);
     try {
-      const response = await api.put('/users/me', {
+      const response = await api.put('users/me', {
         username,
         displayName,
         bio,
@@ -356,3 +356,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default EditProfileScreen;
+
