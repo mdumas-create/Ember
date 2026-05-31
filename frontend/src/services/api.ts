@@ -2,16 +2,12 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Use localhost for web, IP for mobile
-const envUrl = (process as any)?.env?.EXPO_PUBLIC_API_URL as string | undefined;
-console.log('API URL Source:', envUrl ? 'Environment' : 'Fallback');
-console.log('API URL Value:', envUrl || 'http://localhost:3000/api');
+// Use the static URL from Render as a robust fallback
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://ember-backend-dpn8.onrender.com/api';
 
-const API_URL = envUrl
-  ? envUrl
-  : Platform.OS === 'web'
-    ? 'http://localhost:3000/api'
-    : 'http://192.168.0.114:3000/api';
+console.log('--- API DEBUG ---');
+console.log('Platform:', Platform.OS);
+console.log('API_URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
