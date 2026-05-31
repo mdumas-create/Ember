@@ -4,6 +4,9 @@ import { Platform } from 'react-native';
 
 // Use localhost for web, IP for mobile
 const envUrl = (process as any)?.env?.EXPO_PUBLIC_API_URL as string | undefined;
+console.log('API URL Source:', envUrl ? 'Environment' : 'Fallback');
+console.log('API URL Value:', envUrl || 'http://localhost:3000/api');
+
 const API_URL = envUrl
   ? envUrl
   : Platform.OS === 'web'
