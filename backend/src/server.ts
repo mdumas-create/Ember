@@ -38,8 +38,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // If origin matches one of allowedOrigins or is null (for mobile/server-to-server)
-    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+    // If origin matches one of allowedOrigins, is null (for mobile), or ends with .vercel.app
+    if (!origin || 
+        allowedOrigins.includes(origin.replace(/\/$/, '')) || 
+        origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked for origin: ${origin}`);
