@@ -20,11 +20,23 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req: any, file: any) => {
     logger.info(`Processing file: ${file.originalname} (${file.mimetype})`);
-    // Removing allowed_formats to let resource_type: 'auto' handle everything
+    
+    const isVideo = file.mimetype.startsWith('video/');
+    const isAudio = file.mimetype.startsWith('audio/');
+    
+    // Cloudinary resource types: 'image', 'video', 'raw'
+    let resource_type = 'image';
+    if (isVideo) resource_type = 'video';
+    if (isAudio) resource_type = 'video'; // Cloudinary handles audio as 'video' or 'raw'
+
+    const fileExt = file.originalname.split('.').pop();
+    const fileName = file.originalname.replace(/\.[^/.]+$/, "").replace(/\s+/g, '_');
+
     return {
       folder: 'ember-posts',
-      resource_type: 'auto',
-      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      resource_type: resource_type,
+      public_id: `${Date.now()}-${fileName}`,
+      format: fileExt,
     };
   },
 });
