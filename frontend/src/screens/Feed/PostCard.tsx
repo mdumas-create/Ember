@@ -182,12 +182,26 @@ const PostCard = ({ post, onRefresh }: any) => {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(m: any) => m.id}
             renderItem={({ item }: any) => (
-              <ExpoImage source={{ uri: item.url }} style={styles.image} contentFit="cover" />
+              <ExpoImage 
+                source={{ uri: item.url }} 
+                style={styles.image} 
+                contentFit="cover"
+                transition={200}
+                cachePolicy="memory-disk"
+              />
             )}
           />
         </View>
       ) : (
-        post.imageUrl ? <ExpoImage source={{ uri: post.imageUrl }} style={styles.image} contentFit="cover" /> : null
+        post.imageUrl ? (
+          <ExpoImage 
+            source={{ uri: post.imageUrl }} 
+            style={styles.image} 
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+          />
+        ) : null
       )}
 
       <View style={styles.footer}>

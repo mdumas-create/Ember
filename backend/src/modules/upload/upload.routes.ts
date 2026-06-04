@@ -21,22 +21,12 @@ const storage = new CloudinaryStorage({
   params: async (req: any, file: any) => {
     logger.info(`Processing file: ${file.originalname} (${file.mimetype})`);
     
-    const isVideo = file.mimetype.startsWith('video/');
-    const isAudio = file.mimetype.startsWith('audio/');
-    
     // Cloudinary resource types: 'image', 'video', 'raw'
-    let resource_type = 'image';
-    if (isVideo) resource_type = 'video';
-    if (isAudio) resource_type = 'video'; // Cloudinary handles audio as 'video' or 'raw'
-
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = file.originalname.replace(/\.[^/.]+$/, "").replace(/\s+/g, '_');
-
+    // SVG is often treated as 'raw' for security. We force 'auto' or 'image' if possible.
     return {
       folder: 'ember-posts',
-      resource_type: resource_type,
-      public_id: `${Date.now()}-${fileName}`,
-      format: fileExt,
+      resource_type: 'auto', // Use 'auto' to let Cloudinary decide best
+      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },
 });
