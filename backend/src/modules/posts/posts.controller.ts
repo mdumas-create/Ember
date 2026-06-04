@@ -12,19 +12,23 @@ import { extractHashtags, extractMentions } from '../../utils/text';
 import { triggerWebhook } from '../../utils/webhooks';
 
 const CreatePostSchema = z.object({
-  content: z.string().min(1).max(280),
+  content: z.string().max(280).optional().or(z.literal('')),
   imageUrl: z.string().nullable().optional().or(z.literal('')),
   media: z.array(z.object({ url: z.string().min(1), type: z.string().min(1) })).max(5).optional(),
+}).refine(data => data.content?.trim() || data.imageUrl || (data.media && data.media.length > 0), {
+  message: "El post debe tener contenido o al menos una imagen/media",
+  path: ["content"]
 });
 
 export const createPost = async (req: Request, res: Response) => {
   try {
     const validated = CreatePostSchema.parse(req.body);
-    if (containsBannedWords(validated.content)) {
+    const cleanContent = validated.content ? sanitizeText(validated.content) : '';
+    
+    if (cleanContent && containsBannedWords(cleanContent)) {
       return res.status(400).json({ error: 'Contenido no permitido' });
     }
     const authReq = req as AuthRequest;
-    const cleanContent = sanitizeText(validated.content) as string;
     const hashtags = extractHashtags(cleanContent);
     const mentions = extractMentions(cleanContent);
     const post = await prisma.post.create({
