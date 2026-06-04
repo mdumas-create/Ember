@@ -20,10 +20,11 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req: any, file: any) => {
     logger.info(`Processing file: ${file.originalname} (${file.mimetype})`);
+    // Removing allowed_formats to let resource_type: 'auto' handle everything
     return {
       folder: 'ember-posts',
-      allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp', 'mp4', 'mov', 'webm', 'mp3', 'm4a', 'wav'],
       resource_type: 'auto',
+      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },
 });
