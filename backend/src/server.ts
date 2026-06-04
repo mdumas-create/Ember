@@ -36,12 +36,22 @@ const allowedOrigins = [
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, '')) : []),
 ].filter(Boolean) as string[];
 
+// Handle crashes gracefully
+process.on('uncaughtException', (err) => {
+  logger.error('CRITICAL: Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 app.use(cors({
   origin: (origin, callback) => {
-    // If origin matches one of allowedOrigins, is null (for mobile), or ends with .vercel.app
-    if (!origin || 
-        allowedOrigins.includes(origin.replace(/\/$/, '')) || 
-        origin.endsWith('.vercel.app')) {
+    if (!origin) return callback(null, true);
+    
+    const cleanOrigin = origin.replace(/\/$/, '');
+    
+    if (allowedOrigins.includes(cleanOrigin) || cleanOrigin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked for origin: ${origin}`);
@@ -49,7 +59,7 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cache-Control'],
   credentials: true,
   optionsSuccessStatus: 200
 }));

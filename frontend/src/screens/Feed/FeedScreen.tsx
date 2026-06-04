@@ -170,7 +170,6 @@ const FeedScreen = () => {
           }
 
           const uploadRes = await api.post('upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
             onUploadProgress: (evt: any) => {
               if (!evt.total) return;
               const part = Math.max(0, Math.min(1, evt.loaded / evt.total));
@@ -273,9 +272,7 @@ const FeedScreen = () => {
       } as any);
     }
 
-    const uploadRes = await api.post('upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const uploadRes = await api.post('upload', formData);
 
     await api.post('stories', { mediaUrl: uploadRes.data.url, mediaType: pickedType });
     fetchStories();

@@ -231,7 +231,6 @@ const ChatScreen = ({ route, navigation }: any) => {
     }
 
     const uploadRes = await api.post('upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (evt: any) => {
         if (!evt.total) return;
         const p = Math.max(0, Math.min(1, evt.loaded / evt.total));

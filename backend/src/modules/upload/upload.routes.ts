@@ -1,25 +1,30 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-const multerStorageCloudinary = require('multer-storage-cloudinary');
-const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { authenticateToken } from '../../middlewares/auth';
+import logger from '../../utils/logger';
 
 const router = Router();
 
-// Configure Cloudinary (it uses .env variables automatically if named correctly)
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new (CloudinaryStorage as any)({
+logger.info('Initializing CloudinaryStorage with v4...');
+
+const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'ember-posts',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'mp4', 'mov', 'webm', 'mp3', 'm4a', 'wav'],
-    resource_type: 'auto', // Important for videos
+  params: async (req: any, file: any) => {
+    logger.info(`Processing file: ${file.originalname} (${file.mimetype})`);
+    return {
+      folder: 'ember-posts',
+      allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp', 'mp4', 'mov', 'webm', 'mp3', 'm4a', 'wav'],
+      resource_type: 'auto',
+    };
   },
 });
 
@@ -30,11 +35,38 @@ const upload = multer({
   }
 });
 
-router.post('/', authenticateToken, upload.single('file'), (req: any, res) => {
+router.post('/', (req, res, next) => {
+  logger.info('--- UPLOAD ATTEMPT START ---');
+  logger.info(`Headers: ${JSON.stringify({
+    'content-type': req.headers['content-type'],
+    'origin': req.headers['origin'],
+    'user-agent': req.headers['user-agent']
+  })}`);
+  next();
+}, authenticateToken, (req, res, next) => {
+  logger.info(`Auth successful for user: ${(req as any).user?.id}`);
+  
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      logger.error('MULTER/CLOUDINARY ERROR:', err);
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Error de Multer: ${err.message}` });
+      }
+      return res.status(400).json({ error: err.message || 'Error desconocido en la subida' });
+    }
+    next();
+  });
+}, (req: any, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    logger.warn('UPLOAD FAILED: No file in request');
+    return res.status(400).json({ error: 'No se recibió ningún archivo' });
   }
-  res.json({ url: req.file.path, type: req.file.mimetype });
+  logger.info(`UPLOAD SUCCESSFUL: ${req.file.path}`);
+  res.json({ 
+    url: req.file.path, 
+    type: req.file.mimetype,
+    public_id: req.file.filename 
+  });
 });
 
 export default router;
