@@ -53,7 +53,7 @@ const apiLimiter = rateLimit({
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:19006', // Expo Web
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : []),
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : []),
 ].filter(Boolean) as string[];
 
 app.use(cors({
@@ -61,10 +61,14 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked for origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
+  optionsSuccessStatus: 200
 }));
 
 app.use(helmet({
