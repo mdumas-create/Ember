@@ -53,7 +53,7 @@ const apiLimiter = rateLimit({
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:19006', // Expo Web
-  process.env.FRONTEND_URL, // Vercel deployment URL
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : []),
 ].filter(Boolean) as string[];
 
 app.use(cors({
