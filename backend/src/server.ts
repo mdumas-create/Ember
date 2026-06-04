@@ -29,6 +29,29 @@ import multer from 'multer';
 const app = express();
 const httpServer = createServer(app);
 
+// 1. PRIORITIZE CORS - MUST BE FIRST
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:19006', // Expo Web
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : []),
+].filter(Boolean) as string[];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked for origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
+// 2. OTHER MIDDLEWARES
 if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -48,28 +71,6 @@ const apiLimiter = rateLimit({
   max: 60, // Limit each IP to 60 requests per minute
   message: { error: 'Ritmo de peticiones demasiado alto.' },
 });
-
-// CORS configuration for production
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:19006', // Expo Web
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : []),
-].filter(Boolean) as string[];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked for origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
 
 app.use(helmet({
   crossOriginResourcePolicy: false, // For web images
